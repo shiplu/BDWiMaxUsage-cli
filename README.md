@@ -24,7 +24,7 @@ When you run these programs it would requires some parameters. They are
 - PASSWORD password for the connection. Banglalion uses `123456` for every user.
 - DATA-LIMIT data limit for your package. If your package has 12 GB data limit you can specify it as `"12 GB"` (with quotation) or `12GB` or `12,288 MB`  
 
-**Note:** `qubeebal` has an extra parameter `DATA-LIMIT`.
+**Note:** *Only* `qubeebal` has an extra parameter `DATA-LIMIT`.
 
 The background color of the output is changed according to the size remaining. It can be configured by directly editing the executable. Try to find lines like following
 
@@ -34,5 +34,5 @@ The background color of the output is changed according to the size remaining. I
     YELLOW=512
     GREEN=1024
 
-It means it will show background color in RED if remaining size is less than 256 **MB**. If the size is between 255-511, color will be yellow. For the rest Color will be green(default), Remember, the size specified here is in **MB**. When you edit dont put any spaces (` `) arround `=` sign.
+It means it will show background color in RED if remaining size is less than 256 **MB**. If the size is between 255-511, color will be yellow. For the rest Color will be green(default), Remember, the size specified here is in **MB**. When you edit dont put any spaces(` `) arround `=` sign.
 
