@@ -1,0 +1,99 @@
+#!/bin/bash
+# 
+## Run this program as bellow
+##
+##   qubeebal userid password data-limit
+##
+## Wait some time. It'll show the result in Red
+
+
+## If the remaining data is less than this size 
+## it'll use this color as background.
+## Put size in MB
+
+RED=256
+YELLOW=512
+GREEN=1024
+
+
+
+
+
+## Check if all the required commands are installed.
+for PROG in grep wget tr bc
+do
+  command -v ${PROG} &>/dev/null || { printf "\033[31m%s\033[0m\n" "'${PROG}' not installed. Aborting." 1>&2; exit; }
+done
+
+if [ "a$1" = "a" ]
+then 
+  printf "\033[31mLogin not provided (it should be 1st parameter) \033[0m\n" 1>&2 
+  exit
+fi;
+if [ "a$2" = "a" ]
+then 
+  printf "\033[31mPassword not provided (it should be 2nd parameter) \033[0m\n" 1>&2 
+  exit
+fi;
+if [ "a$3" = "a" ]
+then 
+  printf "\033[31mUsage limit not provided (it should be 2nd parameter). E.g. \"12 GB\", \"8,192MB\", \"22,381,012 KB\" \033[0m\n" 1>&2 
+  exit
+fi;
+
+LOGIN=$1
+PASS=$2
+TSIZE=$3
+
+## change to bytes
+RED=$((1024*1024*$RED))
+YELLOW=$((1024*1024*$YELLOW))
+GREEN=$((1024*1024*$GREEN))
+
+wget -qq --keep-session-cookies \
+    --save-cookies .qubee.cookie.txt \
+    --post-data="sUserName=$LOGIN&sPwd=$PASS&Submit=Login" \
+    http://usage.qubee.com.bd/doLogin.jsp  \
+    -O .qubee.html 
+
+wget --load-cookies .qubee.cookie.txt \
+    -qq --post-data="firstinput=$(date +01-%b-%Y)&secondinput=$(date +%d-%b-%Y)&submit=Generate%20Usage"  \
+    "http://usage.qubee.com.bd/usg.jsp?param1=formSubmit&param2=action" \
+    -O .qubee.html 
+  
+## size in mega bytes
+OSIZE=$(grep -A 1 'Grand Total' .qubee.html |
+grep -E -o '[,\.0-9]+')
+
+## size in bytes
+SIZE=${OSIZE//,/}
+SIZE=$(echo $SIZE*1024*1024|bc -l)
+SIZE=${SIZE/.*}
+
+## Usage Limit in bytes
+TSIZE=${TSIZE^^}
+TSIZE=${TSIZE/GB/*1024*1024*1024}
+TSIZE=${TSIZE/MB/*1024*1024}
+TSIZE=${TSIZE/KB/*1024}
+TSIZE=${TSIZE//[, ]}
+TSIZE=$(echo $TSIZE|bc)
+TSIZE=${TSIZE/.*}
+
+## Remainting in bytes
+SIZE=$(($TSIZE-$SIZE))
+
+## Original size in mega bytes for priting
+OSIZE=$(echo $SIZE/1024/1024|bc -l)
+OSIZE=$(printf "%0.2f MB" $OSIZE)
+
+if [ "${SIZE}" -lt "${RED}" ]; 
+then 
+  printf "\033[1;41m ${OSIZE} \033[0m\n"
+else 
+  if [ "${SIZE}" -lt "${YELLOW}" ]; 
+  then 
+    printf "\033[1;90;103m ${OSIZE} \033[0m\n"
+  else 
+    printf "\033[1;90;42m ${OSIZE} \033[0m\n"
+  fi
+fi

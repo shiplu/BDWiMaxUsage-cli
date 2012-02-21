@@ -1,0 +1,71 @@
+#!/bin/bash
+# 
+## Run this program as bellow
+##
+##   blionbal userid password
+##
+## Wait some time. It'll show the result in Red
+
+
+## If the remaining data is less than this size 
+## it'll use this color as background.
+## Put size in MB
+
+RED=256
+YELLOW=512
+GREEN=1024
+
+
+
+
+
+## Check if all the required commands are installed.
+for PROG in grep wget tr bc
+do
+  command -v ${PROG} &>/dev/null || { printf "\033[31m%s\033[0m\n" "'${PROG}' not installed. Aborting." 1>&2; exit; }
+done
+
+if [ "a$1" = "a" ]
+then 
+  printf "\033[31mLogin not provided (it should be 1st parameter) \033[0m\n" 1>&2 
+  exit
+fi;
+if [ "a$2" = "a" ]
+then 
+  printf "\033[31mPassword not provided (it should be 2nd parameter) \033[0m\n" 1>&2 
+  exit
+fi;
+
+LOGIN=$1
+PASS=$2
+
+## change to bytes
+RED=$((1024*1024*$RED))
+YELLOW=$((1024*1024*$YELLOW))
+GREEN=$((1024*1024*$GREEN))
+
+## original size
+OSIZE=$(wget -qq --post-data="login=$LOGIN&pass=$PASS" http://care.banglalionwimax.com/radauth.php -O .blion.html 
+grep -A 2 'Your Volume Remaining:' .blion.html |
+grep -E -o '[,\.0-9]+ ..');
+
+## size in bytes
+SIZE=${OSIZE^^}
+SIZE=${SIZE/GB/*1024*1024*1024}
+SIZE=${SIZE/MB/*1024*1024}
+SIZE=${SIZE/KB/*1024}
+SIZE=${SIZE//[, ]}
+SIZE=$(echo $SIZE|bc)
+SIZE=${SIZE/.*}
+
+if [ "${SIZE}" -lt "${RED}" ]; 
+then 
+  printf "\033[1;41m ${OSIZE//,/} \033[0m\n"
+else 
+  if [ "${SIZE}" -lt "${YELLOW}" ]; 
+  then 
+    printf "\033[1;90;103m ${OSIZE//,/} \033[0m\n"
+  else 
+    printf "\033[1;90;42m ${OSIZE//,/} \033[0m\n"
+  fi
+fi
